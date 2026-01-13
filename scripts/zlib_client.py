@@ -122,11 +122,18 @@ def resolve_user_id(entity) -> int:
     return int(getattr(entity, "user_id", 0) or 0)
 
 
-async def wait_latest_from(client: TelegramClient, peer) -> Message:
-    while True:
-        msg = (await client.get_messages(peer, limit=1))[0]
-        if msg is not None:
-            return msg
+import asyncio
+
+async def wait_new_message(client: TelegramClient, peer, min_id: int, timeout: int = 60) -> Message:
+    """Wait for a new message from peer with id > min_id."""
+    for _ in range(timeout):
+        messages = await client.get_messages(peer, limit=1)
+        if messages:
+            msg = messages[0]
+            if msg.id > min_id and resolve_user_id(msg.sender) == resolve_user_id(peer):
+                return msg
+        await asyncio.sleep(1)
+    raise TimeoutError("Timeout waiting for bot response")
 
 
 async def main() -> None:
@@ -162,10 +169,16 @@ async def main() -> None:
         entity = await client.get_entity(bot_user)
         bot_id = resolve_user_id(entity)
 
-        await client.send_message(bot_user, args.title)
-        msg = await wait_latest_from(client, bot_user)
-        while resolve_user_id(msg.sender) != bot_id:
-            msg = await wait_latest_from(client, bot_user)
+        # Get last message id to filter new messages
+        last_msgs = await client.get_messages(entity, limit=1)
+        last_id = last_msgs[0].id if last_msgs else 0
+
+        await client.send_message(entity, args.title)
+
+        # Wait for search results
+        msg = await wait_new_message(client, entity, last_id)
+        last_id = msg.id  # Update last_id
+
         text = msg.raw_text or ""
 
         results = parse_results(text)
@@ -178,10 +191,16 @@ async def main() -> None:
         if idx >= len(book_ids):
             raise RuntimeError("Selected index out of range")
 
-        await client.send_message(bot_user, book_ids[idx])
-        file_msg = await wait_latest_from(client, bot_user)
-        while resolve_user_id(file_msg.sender) != bot_id or not getattr(file_msg, "file", None):
-            file_msg = await wait_latest_from(client, bot_user)
+        await client.send_message(entity, book_ids[idx])
+
+        # Wait for file
+        # Note: Bot might send "uploading..." text before file, so we need to loop
+        while True:
+            file_msg = await wait_new_message(client, entity, last_id)
+            last_id = file_msg.id
+            if getattr(file_msg, "file", None):
+                break
+
         file_path = await client.download_media(file_msg, file=download_dir)
         print(file_path)
 
