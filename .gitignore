@@ -1,0 +1,7 @@
+*.session
+.env
+.venv/
+__pycache__/
+*.pyc
+downloads/
+playwright/.cache/
