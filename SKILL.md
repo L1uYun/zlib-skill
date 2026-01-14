@@ -20,10 +20,10 @@ Agent 必须遵循以下流程与用户交互，确保顺畅的用户体验。
 2.  **保存配置**: 使用 `Write` 工具将这些内容写入 `.env` 文件（参考原有格式）。
 
 **如果缺少 zlib.session (未登录)**:
-1.  **请求验证码**: 运行 `.venv/Scripts/python scripts/auth_step1_request_code.py` (Linux/Mac 用 `.venv/bin/python`)。
+1.  **请求验证码**: 运行 `.venv/Scripts/python scripts/auth.py request` (Linux/Mac 用 `.venv/bin/python`)。
 2.  **询问验证码**: **立即**使用 `AskUserQuestion` 询问用户 "请输入您收到的 Telegram 5 位登录验证码"。
-3.  **提交验证码**: 运行 `.venv/Scripts/python scripts/auth_step2_submit_code.py <用户输入的验证码>`。
-4.  **二步验证 (如果需要)**: 如果脚本输出提示需要密码，使用 `AskUserQuestion` 询问密码，然后运行 `.venv/Scripts/python scripts/auth_step3_submit_password.py <密码>`。
+3.  **提交验证码**: 运行 `.venv/Scripts/python scripts/auth.py submit <用户输入的验证码>`。
+4.  **二步验证 (如果需要)**: 如果脚本输出提示需要密码，使用 `AskUserQuestion` 询问密码，然后运行 `.venv/Scripts/python scripts/auth.py 2fa <密码>`。
 
 ### 2. 下载书籍 (Download)
 
@@ -62,9 +62,9 @@ Agent 必须遵循以下流程与用户交互，确保顺畅的用户体验。
 |------|------|
 | **搜索/下载** | `python scripts/zlib_client.py --title "书名" [--index N]` |
 | **转换 PDF** | `python scripts/calibre_convert.py "source_file"` |
-| **登录 Step 1** | `python scripts/auth_step1_request_code.py` |
-| **登录 Step 2** | `python scripts/auth_step2_submit_code.py <code>` |
-| **登录 Step 3** | `python scripts/auth_step3_submit_password.py <password>` |
+| **登录 Step 1** | `python scripts/auth.py request` |
+| **登录 Step 2** | `python scripts/auth.py submit <code>` |
+| **登录 Step 3** | `python scripts/auth.py 2fa <password>` |
 
 ## 故障排除
 
