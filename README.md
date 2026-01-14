@@ -13,9 +13,21 @@
 
 ### 1. 安装技能
 
+将此仓库克隆到您的 Claude 技能目录（通常是 `~/.claude/skills`）：
+
 ```bash
-# 在 Claude Code 中
-/skill-manager install zlib
+# 进入 Claude 技能目录 (如果没有则创建)
+mkdir -p ~/.claude/skills
+cd ~/.claude/skills
+
+# 克隆仓库
+git clone https://github.com/L1uYun/zlib-skill.git zlib
+```
+
+或者，如果您安装了 `skill-manager` 技能，可以使用：
+
+```bash
+/skill-manager install https://github.com/L1uYun/zlib-skill
 ```
 
 ### 2. 初始化配置
