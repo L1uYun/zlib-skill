@@ -77,6 +77,7 @@ See [references/initialization.md](references/initialization.md) for complete se
 |--------|---------|
 | `scripts/zlib_client.py` | Telegram bot interaction |
 | `scripts/calibre_convert.py` | PDF conversion |
+| `scripts/auth_step*.py` | Telegram authentication |
 
 ## Requirements
 

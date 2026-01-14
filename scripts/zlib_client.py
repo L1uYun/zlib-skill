@@ -154,6 +154,9 @@ async def main() -> None:
     if not download_dir.is_absolute():
         download_dir = base_dir / download_dir
 
+    # Ensure download directory exists
+    download_dir.mkdir(exist_ok=True)
+
     session_path = base_dir / "zlib.session"
     proxy = get_proxy()
     client = TelegramClient(str(session_path), api_id, api_hash, proxy=proxy, connection_retries=10, retry_delay=1)

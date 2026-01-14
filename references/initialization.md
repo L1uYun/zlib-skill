@@ -96,26 +96,49 @@ DOWNLOAD_DIR=downloads
 
 ## Step 5: 登录 Telegram
 
+由于 Claude 环境限制交互式输入，我们提供分步脚本来完成登录。
+
+### 5.1 发送验证码
+
 ```bash
-.venv/Scripts/python.exe scripts/zlib_client.py --login
+.venv/Scripts/python.exe scripts/auth_step1_request_code.py
 ```
 
-按提示操作：
-1. 确认手机号（自动读取）
-2. 输入 Telegram 发送的验证码
-3. 如有两步验证密码，输入密码
+运行后，Telegram 会收到 5 位数验证码。
+
+### 5.2 提交验证码
+
+```bash
+.venv/Scripts/python.exe scripts/auth_step2_submit_code.py <验证码>
+```
+
+例如：`.venv/Scripts/python.exe scripts/auth_step2_submit_code.py 12345`
+
+### 5.3 提交两步验证密码（如有）
+
+如果 Step 2 提示 `PASSWORD_NEEDED`，请运行：
+
+```bash
+.venv/Scripts/python.exe scripts/auth_step3_submit_password.py <你的密码>
+```
 
 成功后生成 `zlib.session` 文件。
 
 ## Step 6: 登录 NotebookLM
 
+建议在外部终端运行以下命令进行初始化登录：
+
 ```bash
+# 在外部 CMD 或 PowerShell 中运行
+cd <skill-directory>
 .venv/Scripts/notebooklm.exe login
 ```
 
 1. 浏览器自动打开 NotebookLM 页面
 2. 完成 Google 账号登录
 3. 看到 NotebookLM 主页后，回到终端按 **Enter** 保存
+
+**注意**：在 Claude 内部直接运行可能因为无法输入回车而导致超时。如果在 Claude 中运行，请确保您已经在浏览器中登录过 Google，然后它可能会自动完成。
 
 认证保存在 `~/.notebooklm/storage_state.json`。
 
