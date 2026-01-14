@@ -1,5 +1,5 @@
 ---
-name: zlib
+name: zlib-skill
 description: Use this skill when the user wants to search or download books from Z-Library, configure Z-Library credentials, or upload downloaded books to NotebookLM. Handles authentication and interactive book selection.
 ---
 
@@ -51,8 +51,20 @@ Agent 必须遵循以下流程与用户交互，确保顺畅的用户体验。
     *注意*: 只有当用户需要 PDF 或后续要上传到 NotebookLM 时才执行此步。
 
 *   **上传到 NotebookLM**:
-    1.  如果需要创建新笔记本: `notebooklm create "笔记本名称"`
-    2.  上传文件: `notebooklm source add "PDF文件路径"`
+    **注意**: `notebooklm` 自动化工具在 CLI 环境下可能无法通过浏览器登录验证。
+
+    1.  **检查登录状态**: 运行 `.venv/Scripts/notebooklm status`。
+    2.  **如果未登录**:
+        *   **请用户手动执行**: 告知用户在**新的终端窗口**中运行以下命令完成登录：
+            `E:\ClaudeCode\testzlib\.claude\skills\zlib-skill\.venv\Scripts\notebooklm login`
+        *   **或者尝试 CLI**: 运行 `.venv/Scripts/notebooklm login` (可能会超时)。
+    3.  **如果已登录**:
+        *   创建笔记本: `.venv/Scripts/notebooklm create "笔记本名称"`
+        *   上传文件: `.venv/Scripts/notebooklm source add "PDF文件路径"`
+    4.  **手动 fallback**: 如果以上皆失败，请明确告知用户文件路径，建议用户：
+        *   打开 [NotebookLM](https://notebooklm.google.com/)
+        *   新建笔记本
+        *   将本地文件拖入网页上传。
 
 ## 常用命令参考
 
@@ -65,9 +77,11 @@ Agent 必须遵循以下流程与用户交互，确保顺畅的用户体验。
 | **登录 Step 1** | `python scripts/auth.py request` |
 | **登录 Step 2** | `python scripts/auth.py submit <code>` |
 | **登录 Step 3** | `python scripts/auth.py 2fa <password>` |
+| **NotebookLM**| `.venv/Scripts/notebooklm [login|status|create|source add]` |
 
 ## 故障排除
 
 *   **ModuleNotFoundError**: 确保使用了虚拟环境中的 Python (`.venv/...`).
-*   **AuthKeyUnregistered / SessionRevoked**: 删除 `zlib.session` 文件，并重新执行“环境检查与初始化”中的登录流程。
+*   **AuthKeyUnregistered / SessionRevoked**: 删除 `zlib.session` 和 `auth_state.json` 文件，并重新执行“环境检查与初始化”中的登录流程。
 *   **Timeout**: Telegram 连接可能不稳定，请检查 `TG_PROXY` 设置是否正确 (在 `.env` 中)。
+*   **NotebookLM 登录超时**: 建议用户在独立终端手动运行登录命令。
