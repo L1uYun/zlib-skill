@@ -88,8 +88,8 @@ def choose_index(results: list[str], provided: int | None) -> int:
         safe_item = item.encode("utf-8", errors="ignore").decode("utf-8")
         print(f"[{i}] {safe_item}")
     if provided is None:
-        choice = input("选择要下载的序号: ").strip()
-        idx = int(choice)
+        print("请重新运行命令并添加 --index <序号> 参数来下载。")
+        sys.exit(0)
     else:
         idx = provided
     if idx < 1 or idx > len(results):
