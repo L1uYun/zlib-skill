@@ -1,85 +1,73 @@
 ---
 name: zlib
-description: 当用户要求 "从 Z-Library 下载书籍"、"搜索 zlib"、"转换电子书为 PDF" 或 "上传到 NotebookLM" 时使用。用于自动化书籍获取和 AI 分析流程。
+description: Use this skill when the user wants to search or download books from Z-Library, configure Z-Library credentials, or upload downloaded books to NotebookLM. Handles authentication and interactive book selection.
 ---
 
-# Z-Library + NotebookLM 技能
+# Z-Library + NotebookLM Interactive Skill
 
-通过 Telegram Bot 下载书籍 → 转换为 PDF → 上传到 NotebookLM 进行问答和内容生成。
+这是一个交互式技能，用于从 Z-Library 获取书籍并利用 AI 进行分析。
 
-**重要提示**: 所有命令必须在技能根目录下执行。Agent 应首先找到并 `cd` 进入技能目录 (例如 `~/.claude/skills/zlib` 或用户安装的位置)。
+## 交互式工作流
 
-## 快速参考
+Agent 必须遵循以下流程与用户交互，确保顺畅的用户体验。
 
-| 任务 | 命令 (需在技能目录下执行) |
-|------|---------------------------|
-| **登录 Telegram** | `.venv/Scripts/python scripts/auth_step1_request_code.py` |
-| **下载书籍** | `.venv/Scripts/python scripts/zlib_client.py --title "书名"` |
-| **转换 PDF** | `.venv/Scripts/python scripts/calibre_convert.py "文件路径"` |
-| **上传/使用** | `.venv/Scripts/notebooklm ...` |
+### 1. 环境检查与初始化 (Setup)
 
-> **注意**: Linux/Mac 请使用 `.venv/bin/python`。
+在执行任何任务前，**必须**检查 `.env` 文件和 `zlib.session` 文件是否存在于技能根目录。
 
-## 常见任务
+**如果缺少 .env 配置**:
+1.  **询问配置**: 使用 `AskUserQuestion` 依次或一次性获取用户的 `TG_API_ID`, `TG_API_HASH`, `TG_PHONE` (格式 +86...), `ZLIB_BOT_USER` (例如 @zlib_bot)。
+2.  **保存配置**: 使用 `Write` 工具将这些内容写入 `.env` 文件（参考原有格式）。
 
-### 1. 自动初始化与认证 (Auto-Setup)
-
-**当执行任务失败 (如报错 "Missing env" 或 "Unauthorized")，或文件 (`.env`, `zlib.session`) 缺失时，必须触发此流程：**
-
-#### 第一步：配置 .env
-如果 `.env` 不存在：
-1.  使用 `AskUserQuestion` 询问用户的 `TG_API_ID`, `TG_API_HASH`, `TG_PHONE`, `ZLIB_BOT_USER` (例如 @zlibforxxx_bot)。
-2.  使用 `Write` 工具将这些内容写入 `.env` 文件。
-    ```ini
-    TG_API_ID=...
-    TG_API_HASH=...
-    TG_PHONE=...
-    ZLIB_BOT_USER=...
-    DOWNLOAD_DIR=downloads
-    TG_PROXY=http://127.0.0.1:7890
-    ```
-
-#### 第二步：Telegram 认证
-如果 `zlib.session` 不存在，执行以下连续动作（不要中断）：
-1.  运行发送验证码脚本：
-    ```bash
-    .venv/Scripts/python scripts/auth_step1_request_code.py
-    ```
-2.  **立即**使用 `AskUserQuestion` 询问用户收到的 5 位验证码（不要等待用户先说话）。
-3.  获取验证码后，运行提交脚本：
-    ```bash
-    .venv/Scripts/python scripts/auth_step2_submit_code.py <用户输入的验证码>
-    ```
-4.  如果提示 `PASSWORD_NEEDED`，再询问两步验证密码并运行 `scripts/auth_step3_submit_password.py <密码>`。
+**如果缺少 zlib.session (未登录)**:
+1.  **请求验证码**: 运行 `.venv/Scripts/python scripts/auth_step1_request_code.py` (Linux/Mac 用 `.venv/bin/python`)。
+2.  **询问验证码**: **立即**使用 `AskUserQuestion` 询问用户 "请输入您收到的 Telegram 5 位登录验证码"。
+3.  **提交验证码**: 运行 `.venv/Scripts/python scripts/auth_step2_submit_code.py <用户输入的验证码>`。
+4.  **二步验证 (如果需要)**: 如果脚本输出提示需要密码，使用 `AskUserQuestion` 询问密码，然后运行 `.venv/Scripts/python scripts/auth_step3_submit_password.py <密码>`。
 
 ### 2. 下载书籍 (Download)
 
-直接搜索并下载。**无需**反复确认授权。
+当用户请求搜索或下载书籍时：
 
-```bash
-.venv/Scripts/python scripts/zlib_client.py --title "书名"
-```
+1.  **执行搜索**:
+    运行命令: `.venv/Scripts/python scripts/zlib_client.py --title "用户提供的书名"`
 
-- 如果返回多个结果，列出结果并询问用户选择哪个序号 (使用 `--index N` 重新运行)。
-- 如果用户明确指定 (如 "下载第一个结果")，直接加 `--index 1`。
+2.  **解析输出并交互**:
+    *   **直接下载成功**: 如果输出最后一行是文件路径，则跳过此步。
+    *   **未找到结果**: 如果输出提示 "No results" 或类似信息，告知用户未找到该书，并询问是否要搜索其他关键词。
+    *   **需要用户选择**: 如果输出包含编号列表 (如 `[1] 书名...`) 和提示信息：
+        1.  **提取选项**: 从输出中解析出书籍列表。
+        2.  **询问用户**: 使用 `AskUserQuestion` (建议使用 `multiSelect: false` 的选择题形式，或者简单的文本回答) 让用户选择一本。
+            *   *示例提问*: "找到了以下书籍，请选择您想下载的序号："
+        3.  **再次执行**: 根据用户选择的序号 (例如 `N`)，重新运行命令：
+            `.venv/Scripts/python scripts/zlib_client.py --title "用户提供的书名" --index N`
 
-### 3. 完整流程 (All-in-one)
+### 3. 转换与上传 (Convert & Upload)
 
-如果用户要求 "下载 X 并上传到 NotebookLM":
+下载成功获得文件路径后，根据用户意图执行：
 
-1.  **下载**: `python scripts/zlib_client.py --title "X" --index 1`
-2.  **转换**: `python scripts/calibre_convert.py <epub文件>`
-3.  **创建**: `notebooklm create "X"`
-4.  **上传**: `notebooklm source add <pdf文件>`
+*   **转换为 PDF**:
+    运行 `.venv/Scripts/python scripts/calibre_convert.py "文件路径"`
+    *注意*: 只有当用户需要 PDF 或后续要上传到 NotebookLM 时才执行此步。
 
-## 脚本说明
+*   **上传到 NotebookLM**:
+    1.  如果需要创建新笔记本: `notebooklm create "笔记本名称"`
+    2.  上传文件: `notebooklm source add "PDF文件路径"`
 
-| 脚本 | 用途 |
+## 常用命令参考
+
+所有命令均需在技能根目录下执行。Windows 使用 `.venv/Scripts/python`，Linux/Mac 使用 `.venv/bin/python`。
+
+| 任务 | 命令 |
 |------|------|
-| `scripts/zlib_client.py` | 下载书籍。支持 `--title` (搜索) 和 `--index` (选择)。无交互模式。 |
-| `scripts/auth_step*.py` | 分步登录脚本，适用于非交互环境。 |
+| **搜索/下载** | `python scripts/zlib_client.py --title "书名" [--index N]` |
+| **转换 PDF** | `python scripts/calibre_convert.py "source_file"` |
+| **登录 Step 1** | `python scripts/auth_step1_request_code.py` |
+| **登录 Step 2** | `python scripts/auth_step2_submit_code.py <code>` |
+| **登录 Step 3** | `python scripts/auth_step3_submit_password.py <password>` |
 
-## 依赖要求
+## 故障排除
 
-- `.env` 文件配置正确 (API_ID, HASH, PHONE, BOT_USER)
-- Python 3.10+
+*   **ModuleNotFoundError**: 确保使用了虚拟环境中的 Python (`.venv/...`).
+*   **AuthKeyUnregistered / SessionRevoked**: 删除 `zlib.session` 文件，并重新执行“环境检查与初始化”中的登录流程。
+*   **Timeout**: Telegram 连接可能不稳定，请检查 `TG_PROXY` 设置是否正确 (在 `.env` 中)。
