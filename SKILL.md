@@ -1,6 +1,6 @@
 ---
 name: zlib
-description: Use when user asks to download books from Z-Library, search Z-Library via Telegram bot, convert ebooks to PDF, or upload books to NotebookLM for analysis. Triggers on "download book", "zlib", "Z-Library", "get ebook", "upload to NotebookLM".
+description: Use when the user asks to "download books from Z-Library", "search zlib", "convert epub to pdf", or "upload to NotebookLM". Triggers on specific requests for Z-Library content retrieval and NotebookLM analysis.
 ---
 
 # Z-Library + NotebookLM Skill
@@ -15,7 +15,7 @@ Require explicit user confirmation for authorized personal use. Refuse mass down
 
 | Step | Command |
 |------|---------|
-| Download | `.venv/Scripts/python.exe scripts/zlib_client.py --title "书名"` |
+| Download | `.venv/Scripts/python.exe scripts/zlib_client.py --title "Book Title"` |
 | Convert | `.venv/Scripts/python.exe scripts/calibre_convert.py downloads/book.epub` |
 | Create notebook | `.venv/Scripts/notebooklm.exe create "title"` |
 | Upload PDF | `.venv/Scripts/notebooklm.exe source add "file.pdf"` |
@@ -27,7 +27,7 @@ Require explicit user confirmation for authorized personal use. Refuse mass down
 ### 1. Download Book
 
 ```bash
-.venv/Scripts/python.exe scripts/zlib_client.py --title "书名"
+.venv/Scripts/python.exe scripts/zlib_client.py --title "Book Title"
 # With selection: --index 1
 ```
 
@@ -59,7 +59,7 @@ Requires Calibre installed on system.
 
 ## First-Time Setup
 
-See [references/initialization.md](references/initialization.md) for complete setup guide.
+Consult [references/initialization.md](references/initialization.md) for complete setup guide.
 
 **Quick check:**
 - `.env` file with Telegram credentials
