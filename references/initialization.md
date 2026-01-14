@@ -20,7 +20,6 @@
 cd E:/portable/inbox/zlib-skill  # 替换为你的技能目录
 python -m venv .venv
 .venv/Scripts/pip.exe install -r requirements.txt
-.venv/Scripts/pip.exe install "notebooklm-py[browser]"
 playwright install chromium
 ```
 
