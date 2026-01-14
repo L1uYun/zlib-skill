@@ -24,12 +24,6 @@ cd ~/.claude/skills
 git clone https://github.com/L1uYun/zlib-skill.git zlib
 ```
 
-或者，如果您安装了 `skill-manager` 技能，可以使用：
-
-```bash
-/skill-manager install https://github.com/L1uYun/zlib-skill
-```
-
 ### 2. 初始化配置
 
 详细配置指南请参考 [references/initialization.md](references/initialization.md)。
