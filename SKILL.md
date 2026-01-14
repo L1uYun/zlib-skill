@@ -40,13 +40,13 @@ description: 当用户要求 "从 Z-Library 下载书籍"、"搜索 zlib"、"转
     ```
 
 #### 第二步：Telegram 认证
-如果 `zlib.session` 不存在：
+如果 `zlib.session` 不存在，执行以下连续动作（不要中断）：
 1.  运行发送验证码脚本：
     ```bash
     .venv/Scripts/python scripts/auth_step1_request_code.py
     ```
-2.  使用 `AskUserQuestion` 询问用户收到的 5 位验证码。
-3.  运行提交脚本：
+2.  **立即**使用 `AskUserQuestion` 询问用户收到的 5 位验证码（不要等待用户先说话）。
+3.  获取验证码后，运行提交脚本：
     ```bash
     .venv/Scripts/python scripts/auth_step2_submit_code.py <用户输入的验证码>
     ```

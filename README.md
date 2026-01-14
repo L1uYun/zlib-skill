@@ -13,14 +13,19 @@
 
 ### 1. 安装技能
 
-将此仓库克隆到您的 Claude 技能目录（通常是 `~/.claude/skills`）：
+将此仓库克隆到您的 Claude 全局技能目录（建议）：
 
+**Windows (PowerShell):**
+```powershell
+mkdir -p $HOME\.claude\skills
+cd $HOME\.claude\skills
+git clone https://github.com/L1uYun/zlib-skill.git zlib
+```
+
+**macOS / Linux:**
 ```bash
-# 进入 Claude 技能目录 (如果没有则创建)
 mkdir -p ~/.claude/skills
 cd ~/.claude/skills
-
-# 克隆仓库
 git clone https://github.com/L1uYun/zlib-skill.git zlib
 ```
 
