@@ -22,19 +22,35 @@ description: 当用户要求 "从 Z-Library 下载书籍"、"搜索 zlib"、"转
 
 ## 常见任务
 
-### 1. 登录 (Login)
+### 1. 自动初始化与认证 (Auto-Setup)
 
-如果用户要求 "登录" 或 "初始化":
-1.  检查 `.env` 是否存在。若不存在，引导用户创建。
-2.  **不要**去读 `initialization.md`，直接运行:
+**当执行任务失败 (如报错 "Missing env" 或 "Unauthorized")，或文件 (`.env`, `zlib.session`) 缺失时，必须触发此流程：**
+
+#### 第一步：配置 .env
+如果 `.env` 不存在：
+1.  使用 `AskUserQuestion` 询问用户的 `TG_API_ID`, `TG_API_HASH`, `TG_PHONE`, `ZLIB_BOT_USER` (例如 @zlibforxxx_bot)。
+2.  使用 `Write` 工具将这些内容写入 `.env` 文件。
+    ```ini
+    TG_API_ID=...
+    TG_API_HASH=...
+    TG_PHONE=...
+    ZLIB_BOT_USER=...
+    DOWNLOAD_DIR=downloads
+    TG_PROXY=http://127.0.0.1:7890
+    ```
+
+#### 第二步：Telegram 认证
+如果 `zlib.session` 不存在：
+1.  运行发送验证码脚本：
     ```bash
     .venv/Scripts/python scripts/auth_step1_request_code.py
     ```
-3.  询问用户收到的验证码，然后运行:
+2.  使用 `AskUserQuestion` 询问用户收到的 5 位验证码。
+3.  运行提交脚本：
     ```bash
-    .venv/Scripts/python scripts/auth_step2_submit_code.py <验证码>
+    .venv/Scripts/python scripts/auth_step2_submit_code.py <用户输入的验证码>
     ```
-4.  (如果需要密码) 运行 `scripts/auth_step3_submit_password.py <密码>`。
+4.  如果提示 `PASSWORD_NEEDED`，再询问两步验证密码并运行 `scripts/auth_step3_submit_password.py <密码>`。
 
 ### 2. 下载书籍 (Download)
 
